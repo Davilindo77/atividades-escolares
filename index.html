@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atividades | Davilindo77</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --bg: #f0f2f5; --card: #ffffff; --text: #1a1a1a; --primary: #6366f1; --venicio: #ef4444;
+        }
+        .dark-mode {
+            --bg: #111827; --card: #1f2937; --text: #f9fafb; --primary: #818cf8;
+        }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 20px; transition: 0.3s; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        input, select, button { padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin: 5px 0; }
+        
+        .search-bar { width: 100%; margin-bottom: 20px; font-size: 16px; }
+        
+        .form-container { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: var(--card); padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); position: relative; }
+        .card.venicio { border-left-color: var(--venicio); }
+        
+        .card img { width: 100%; border-radius: 8px; margin-top: 10px; display: block; }
+        .tag { font-size: 12px; font-weight: bold; text-transform: uppercase; color: var(--primary); }
+        .date { font-size: 12px; opacity: 0.6; }
+        
+        .btn-add { background: var(--primary); color: white; border: none; cursor: pointer; width: 100%; font-weight: bold; }
+        .delete-btn { color: #ef4444; cursor: pointer; float: right; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Escola 2026</h1>
+    <button onclick="toggleDark()">🌙</button>
+</div>
+
+<input type="text" id="search" class="search-bar" placeholder="Pesquisar matéria ou Venicio..." onkeyup="render()">
+
+<div class="form-container">
+    <input type="text" id="materia" placeholder="Matéria (ex: Matemática)">
+    <input type="text" id="titulo" placeholder="Título da Atividade">
+    <input type="date" id="data">
+    <input type="text" id="fotoUrl" placeholder="Link da foto da atividade">
+    <label><input type="checkbox" id="isVenicio"> Atividade do Venicio? 🚩</label>
+    <button class="btn-add" onclick="addAtividade()">Salvar Atividade</button>
+</div>
+
+<div id="lista" class="grid"></div>
+
+<p style="text-align: center; opacity: 0.5; margin-top: 40px;">Referência boa feita por Davi</p>
+
+<script>
+    let atividades = JSON.parse(localStorage.getItem('atividades_davi')) || [];
+
+    function addAtividade() {
+        const ativ = {
+            id: Date.now(),
+            materia: document.getElementById('materia').value,
+            titulo: document.getElementById('titulo').value,
+            data: document.getElementById('data').value,
+            foto: document.getElementById('fotoUrl').value,
+            venicio: document.getElementById('isVenicio').checked
+        };
+        atividades.push(ativ);
+        localStorage.setItem('atividades_davi', JSON.stringify(atividades));
+        render();
+        // Limpar campos
+        document.querySelectorAll('input:not([type=checkbox])').forEach(i => i.value = '');
+        document.getElementById('isVenicio').checked = false;
+    }
+
+    function deleteAtiv(id) {
+        atividades = atividades.filter(a => a.id !== id);
+        localStorage.setItem('atividades_davi', JSON.stringify(atividades));
+        render();
+    }
+
+    function render() {
+        const lista = document.getElementById('lista');
+        const busca = document.getElementById('search').value.toLowerCase();
+        lista.innerHTML = '';
+
+        atividades.filter(a => a.materia.toLowerCase().includes(busca) || a.titulo.toLowerCase().includes(busca) || (a.venicio && 'venicio'.includes(busca)))
+        .forEach(a => {
+            lista.innerHTML += `
+                <div class="card ${a.venicio ? 'venicio' : ''}">
+                    <span class="delete-btn" onclick="deleteAtiv(${a.id})">Apagar</span>
+                    <div class="tag">${a.venicio ? '🚩 VENICIO' : a.materia}</div>
+                    <h3>${a.titulo}</h3>
+                    <div class="date">Prazo: ${a.data}</div>
+                    ${a.foto ? `<img src="${a.foto}" alt="atividade">` : ''}
+                </div>
+            `;
+        });
+    }
+
+    function toggleDark() { document.body.classList.toggle('dark-mode'); }
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+    render();
+</script>
+</body>
+</html>
